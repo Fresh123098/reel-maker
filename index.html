@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Fazal's Reels – Professional Urdu Cartoon Studio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; padding: 10px; }
+    .app { max-width: 500px; margin: 0 auto; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #e91e63; margin-bottom: 5px; }
+    .subtitle { text-align: center; color: #666; margin-bottom: 15px; }
+    .section { background: #fafafa; border-radius: 16px; padding: 15px; margin-bottom: 15px; }
+    .section h2 { font-size: 18px; margin-bottom: 10px; }
+    select, input[type="file"], button, textarea, input[type="text"] {
+      width: 100%; padding: 12px; margin: 6px 0; border-radius: 12px; border: 1px solid #ddd;
+      font-size: 16px; background: white;
+    }
+    button { background: #e91e63; color: white; border: none; font-weight: bold; cursor: pointer; }
+    button:active { transform: scale(0.97); }
+    .btn-outline { background: white; color: #e91e63; border: 2px solid #e91e63; }
+    .char-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .char-card { width: 70px; text-align: center; cursor: pointer; }
+    .char-card img { width: 55px; height: 55px; border-radius: 50%; border: 3px solid transparent; }
+    .char-card.selected img { border-color: #e91e63; }
+    .obj-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+    .obj-btn { background: #eee; padding: 8px 14px; border-radius: 20px; font-size: 14px; cursor: pointer; }
+    .obj-btn.active { background: #e91e63; color: white; }
+    .scene-preview { background: #2c3e50; color: white; padding: 8px; border-radius: 12px; margin: 5px 0; display: flex; align-items: center; gap: 8px; }
+    .scene-preview img { width: 35px; height: 35px; border-radius: 50%; }
+    .progress { font-size: 14px; color: #333; margin: 8px 0; }
+    .download-link { display: none; text-align: center; margin: 10px 0; font-weight: bold; color: #e91e63; }
+    .ai-chat { background: #f0f0f0; border-radius: 16px; padding: 10px; margin-top: 15px; }
+    .ai-messages { height: 200px; overflow-y: auto; background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+    .msg { margin: 6px 0; padding: 8px 12px; border-radius: 16px; max-width: 80%; font-size: 14px; word-break: break-word; }
+    .user-msg { background: #e91e63; color: white; margin-left: auto; }
+    .bot-msg { background: #e0e0e0; color: #333; }
+    .confirm-box { background: #fff3e0; border: 1px solid #ff9800; padding: 8px; border-radius: 8px; margin: 8px 0; }
+    .ai-input { display: flex; gap: 8px; }
+    .ai-input input { flex: 1; border: none; padding: 10px; border-radius: 20px; background: white; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>🎬 Fazal's Reels</h1>
+  <p class="subtitle">Professional Urdu Cartoon Studio</p>
+
+  <!-- Story -->
+  <div class="section">
+    <h2>1. Story</h2>
+    <select id="theme"><option value="funny">Funny</option><option value="moral">Moral</option><option value="islamic">Islamic</option><option value="friendship">Friendship</option></select>
+    <button id="genStory">Generate Story</button>
+    <div id="scriptOutput" style="background:#fff3e0;padding:10px;border-radius:8px;margin-top:8px;"></div>
+  </div>
+
+  <!-- Characters -->
+  <div class="section">
+    <h2>2. Characters</h2>
+    <div class="char-grid" id="charGrid"></div>
+    <details style="margin-top:10px;">
+      <summary>+ Create new character</summary>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+        <select id="ht"><option value="round">Round head</option><option value="oval">Oval head</option></select>
+        <select id="hair"><option value="short">Short hair</option><option value="long">Long</option><option value="none">None</option></select>
+        <label>Skin: <input type="color" id="skin" value="#f8c291"></label>
+        <select id="outfit"><option value="shirt">Shirt</option><option value="dress">Dress</option><option value="kurta">Kurta</option></select>
+        <label>Color: <input type="color" id="outfitColor" value="#3f51b5"></label>
+        <button id="saveChar">Save Character</button>
+      </div>
+    </details>
+  </div>
+
+  <!-- Scene Settings -->
+  <div class="section">
+    <h2>3. Scene</h2>
+    <p><b>Objects:</b></p>
+    <div class="obj-btns" id="objBtns">
+      <span class="obj-btn" data-o="car">🚗 Car</span>
+      <span class="obj-btn" data-o="bike">🏍️ Bike</span>
+      <span class="obj-btn" data-o="building">🏢 Building</span>
+      <span class="obj-btn" data-o="tree">🌳 Tree</span>
+    </div>
+    <p style="margin-top:8px;"><b>Background:</b></p>
+    <select id="bg"><option value="gradient">Gradient</option><option value="home">Home</option><option value="school">School</option><option value="mosque">Mosque</option><option value="park">Park</option></select>
+    <p style="margin-top:8px;"><b>Background Music:</b></p>
+    <select id="music"><option value="funny">Funny</option><option value="sad">Emotional</option><option value="calm">Calm</option><option value="upbeat">Upbeat</option></select>
+  </div>
+
+  <!-- Reel Maker -->
+  <div class="section">
+    <h2>4. Create Reel</h2>
+    <button id="autoVoice">🎙️ Generate Urdu Voice (Auto)</button>
+    <div id="voiceStatus"></div>
+    <p style="margin-top:8px;"><b>Or upload your own audio per speaker:</b></p>
+    <div id="speakerUploads"></div>
+    <button id="preview">👁️ Preview Scenes</button>
+    <div id="previewArea"></div>
+    <label style="margin-top:10px;"><b>Platform:</b></label>
+    <select id="platform"><option value="9:16">📱 Shorts/TikTok (9:16)</option><option value="16:9">🖥️ YouTube (16:9)</option><option value="1:1">⬛ Facebook (1:1)</option></select>
+    <label><b>End Screen Text:</b></label>
+    <input type="text" id="endText" value="Fazal's Reels">
+    <button id="makeReel">✨ Create Reel</button>
+    <div id="progress"></div>
+    <a id="dl" download="fazals_reel.mp4" style="display:none;">⬇️ Download Reel</a>
+  </div>
+
+  <!-- AI Assistant -->
+  <div class="ai-chat">
+    <h3>🤖 AI Assistant</h3>
+    <div class="ai-messages" id="aiMsgs"><div class="msg bot-msg">Hello! I can generate stories, add objects, change music, and make the reel. Try: "funny story with car".</div></div>
+    <div class="ai-input"><input type="text" id="aiInput" placeholder="Type command..."><button id="aiSend">Send</button></div>
+  </div>
+</div>
+
+<!-- meSpeak library -->
+<script src="https://cdn.jsdelivr.net/npm/mespeak@2.1.1/dist/mespeak.min.js"></script>
+<!-- FFmpeg import map -->
+<script type="importmap">
+{ "imports": { "@ffmpeg/ffmpeg": "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/esm/index.js", "@ffmpeg/util": "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js" } }
+</script>
+
+<script type="module">
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
+
+// ==================== CHARACTER SVG BUILDER ====================
+function buildCharSVG({head='round', hair='short', skin='#f8c291', outfit='shirt', outfitColor='#3f51b5'}) {
+  const headS = head==='round' ? `<circle cx="50" cy="35" r="18" fill="${skin}" stroke="#333" stroke-width="1.5"/>` : `<ellipse cx="50" cy="35" rx="16" ry="20" fill="${skin}" stroke="#333" stroke-width="1.5"/>`;
+  let hairS = '';
+  if (hair==='short') hairS = `<path d="M28 30 Q50 10 72 30" fill="#5d4037" stroke="#333" stroke-width="1"/>`;
+  else if (hair==='long') hairS = `<path d="M28 30 Q50 10 72 30" fill="#5d4037" stroke="#333" stroke-width="1"/><rect x="25" y="18" width="10" height="20" fill="#5d4037" rx="3"/>`;
+  let outfitS = '';
+  if (outfit==='shirt') outfitS = `<rect x="35" y="53" width="30" height="35" fill="${outfitColor}" rx="5" stroke="#333" stroke-width="1"/>`;
+  else if (outfit==='dress') outfitS = `<path d="M35 53 L35 90 L65 90 L65 53 Q50 45 35 53" fill="${outfitColor}" stroke="#333" stroke-width="1"/>`;
+  else if (outfit==='kurta') outfitS = `<rect x="35" y="53" width="30" height="35" fill="${outfitColor}" rx="3" stroke="#333" stroke-width="1"/><rect x="38" y="55" width="8" height="25" fill="#fff" opacity="0.3"/>`;
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="18" fill="${skin}" stroke="#333"/><circle cx="43" cy="32" r="2" fill="#000"/><circle cx="57" cy="32" r="2" fill="#000"/><path d="M45 40 Q50 45 55 40" stroke="#000" fill="none" stroke-width="2"/>${hairS}${outfitS}</svg>`)}`;
+}
+
+// Default characters
+let characters = {
+  boy: { name:"Boy", img: buildCharSVG({hair:'short', outfit:'shirt', outfitColor:'#3f51b5'}) },
+  girl: { name:"Girl", img: buildCharSVG({hair:'long', outfit:'dress', outfitColor:'#f48fb1'}) },
+  man: { name:"Man", img: buildCharSVG({head:'oval', hair:'short', outfit:'kurta', outfitColor:'#607d8b'}) },
+  woman: { name:"Woman", img: buildCharSVG({head:'oval', hair:'long', outfit:'dress', outfitColor:'#ec407a'}) },
+  grandpa: { name:"Grandpa", img: buildCharSVG({head:'oval', hair:'none', outfit:'kurta', outfitColor:'#795548'}) }
+};
+
+// ==================== STORIES ====================
+const storyDB = {
+  funny: [
+    {speaker:"Child", text:"امی! آج سکول میں ماسٹر جی کی کرسی غائب کر دی۔"},
+    {speaker:"Mother", text:"کیا؟ تم نے یہ کیوں کیا؟"},
+    {speaker:"Child", text:"بس مذاق تھا، پوری کلاس ہنس پڑی۔"},
+    {speaker:"Mother", text:"مذاق اچھی بات ہے مگر شرارت نہیں کرنی چاہیے۔"}
+  ],
+  moral: [
+    {speaker:"Grandfather", text:"بیٹا، سچ بولنا سب سے بڑی بہادری ہے۔"},
+    {speaker:"Girl", text:"دادا، مگر سچ بولنے سے کبھی کبھی ڈانٹ پڑتی ہے۔"},
+    {speaker:"Grandfather", text:"ڈانٹ سے نہیں ڈرنا چاہیے، سچ کا انعام بہت بڑا ہوتا ہے۔"}
+  ],
+  islamic: [
+    {speaker:"Child", text:"ابو، اللہ ہمیں کیوں آزماتا ہے؟"},
+    {speaker:"Father", text:"تاکہ ہم صبر کریں اور ثواب کمائیں، بیٹا۔"},
+    {speaker:"Child", text:"پھر میں ہر مشکل میں صبر کروں گا ان شاء اللہ۔"}
+  ],
+  friendship: [
+    {speaker:"Boy", text:"یار! آج دل بہت اُداس ہے۔"},
+    {speaker:"Friend", text:"کیوں؟ کیا ہوا؟ چلیں چائے پیتے ہیں، بتاؤ۔"},
+    {speaker:"Boy", text:"بس دوست ہو تو ایسا، سب ٹھیک ہو جاتا ہے۔"}
+  ]
+};
+
+// ==================== GLOBAL STATE ====================
+let scenes = [];
+let selectedCharKey = 'boy';
+let activeObjects = new Set();
+let selectedBg = 'gradient';
+let voiceMode = 'upload';   // 'auto' or 'upload'
+let autoAudioBlobs = [];
+let ffmpeg = null, ffmpegLoaded = false;
+let meSpeakReady = false;
+
+// ==================== UI HELPERS ====================
+function renderCharGrid() {
+  const grid = document.getElementById('charGrid');
+  grid.innerHTML = '';
+  for (let [key, ch] of Object.entries(characters)) {
+    const card = document.createElement('div');
+    card.className = 'char-card' + (key === selectedCharKey ? ' selected' : '');
+    card.dataset.key = key;
+    card.innerHTML = `<img src="${ch.img}" alt="${ch.name}"><br>${ch.name}`;
+    card.onclick = () => {
+      document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedCharKey = key;
+      scenes.forEach(s => s.charKey = key);
+      updateSpeakerUploads();
+    };
+    grid.appendChild(card);
+  }
+}
+
+function updateSpeakerUploads() {
+  const container = document.getElementById('speakerUploads');
+  if (!container || !scenes.length) return;
+  container.innerHTML = '';
+  const speakers = [...new Set(scenes.map(s => s.speaker))];
+  speakers.forEach(speaker => {
+    const div = document.createElement('div');
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;margin:6px 0;';
+    div.innerHTML = `<img src="${characters[selectedCharKey].img}" style="width:40px;height:40px;border-radius:50%"><b>${speaker}</b>
+      <input type="file" accept="audio/*" class="voice-upload" data-speaker="${speaker}">`;
+    container.appendChild(div);
+  });
+}
+
+// ==================== meSpeak SETUP (robust) ====================
+async function waitForMeSpeak() {
+  return new Promise((resolve, reject) => {
+    if (window.meSpeak) return resolve();
+    let tries = 0;
+    const interval = setInterval(() => {
+      if (window.meSpeak) { clearInterval(interval); resolve(); }
+      if (++tries > 50) { clearInterval(interval); reject('meSpeak not loaded'); }
+    }, 200);
+  });
+}
+
+async function loadUrduVoice() {
+  if (meSpeakReady) return;
+  await waitForMeSpeak();
+  meSpeak.loadConfig({ amph: 100, pitch: 50, speed: 145, wordgap: 5, variant: 'f' });
+  const resp = await fetch('https://cdn.jsdelivr.net/gh/kripken/speak.js@master/voices/ur.json');
+  const voiceData = await resp.json();
+  meSpeak.loadVoice(voiceData);
+  meSpeakReady = true;
+}
+
+async function generateTTSAudio(text) {
+  await loadUrduVoice();
+  const base64 = meSpeak.speak(text, { rawdata: 'data-url' });
+  const byteString = atob(base64.split(',')[1]);
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for (let i = 0; i < byteString.length; i++) ia[i] = byteString.charCodeAt(i);
+  return new Blob([ab], { type: 'audio/wav' });
+}
+
+// ==================== AUTO VOICE ====================
+async function generateVoice() {
+  const status = document.getElementById('voiceStatus');
+  try {
+    if (!scenes.length) { alert('Please generate a story first.'); return; }
+    status.textContent = 'Loading Urdu voice (first time may take a few seconds)...';
+    autoAudioBlobs = [];
+    for (let i = 0; i < scenes.length; i++) {
+      status.textContent = `Generating voice ${i+1}/${scenes.length}...`;
+      const blob = await generateTTSAudio(scenes[i].text);
+      autoAudioBlobs.push(blob);
+    }
+    voiceMode = 'auto';
+    status.textContent = '✔️ Urdu voice ready!';
+  } catch (e) {
+    status.textContent = '❌ Error: ' + e.message;
+  }
+}
+
+// ==================== PREVIEW ====================
+function previewScenes() {
+  // Attach uploaded files if not auto mode
+  if (voiceMode !== 'auto') {
+    document.querySelectorAll('.voice-upload').forEach(inp => {
+      const speaker = inp.dataset.speaker;
+      const file = inp.files[0];
+      if (file) scenes.filter(s => s.speaker === speaker).forEach(s => s.voiceFile = file);
+    });
+  }
+  const preview = document.getElementById('previewArea');
+  preview.innerHTML = '';
+  scenes.forEach(s => {
+    const char = characters[s.charKey] || characters[selectedCharKey];
+    const div = document.createElement('div');
+    div.className = 'scene-preview';
+    div.innerHTML = `<img src="${char.img}"><span><b>${s.speaker}:</b> ${s.text}</span>`;
+    preview.appendChild(div);
+  });
+}
+
+// ==================== SCENE RENDERING ====================
+async function renderScene(scene, w, h, objects, bg) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+
+  // Background
+  if (bg === 'home') {
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(0,h*0.6,w,h*0.4);
+    ctx.fillStyle = '#F5DEB3'; ctx.fillRect(w*0.4,h*0.4,w*0.3,h*0.3);
+  } else if (bg === 'school') {
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#808080'; ctx.fillRect(0,h*0.7,w,h*0.3);
+    ctx.fillStyle = '#FFD700'; ctx.fillRect(w*0.3,h*0.4,w*0.4,h*0.3);
+  } else if (bg === 'mosque') {
+    ctx.fillStyle = '#4682B4'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#F5F5DC'; ctx.fillRect(0,h*0.6,w,h*0.4);
+    ctx.fillStyle = '#006400'; ctx.beginPath(); ctx.arc(w*0.5,h*0.3,80,Math.PI,0); ctx.fill();
+  } else if (bg === 'park') {
+    ctx.fillStyle = '#87CEEB'; ctx.fillRect(0,0,w,h);
+    ctx.fillStyle = '#228B22'; ctx.fillRect(0,h*0.5,w,h*0.5);
+    ctx.fillStyle = '#8B4513'; ctx.fillRect(w*0.4,h*0.7,40,h*0.2);
+  } else {
+    const grad = ctx.createLinearGradient(0,0,0,h);
+    grad.addColorStop(0,'#1a237e'); grad.addColorStop(1,'#4a148c');
+    ctx.fillStyle = grad; ctx.fillRect(0,0,w,h);
+  }
+
+  // Objects
+  objects.forEach(obj => {
+    if (obj === 'car') {
+      ctx.fillStyle = '#f44336'; ctx.fillRect(w*0.1, h*0.75, 200, 100);
+      ctx.fillStyle = '#000'; ctx.fillRect(w*0.15, h*0.73, 30, 30);
+      ctx.fillRect(w*0.35, h*0.73, 30, 30);
+    } else if (obj === 'bike') {
+      ctx.fillStyle = '#ff9800'; ctx.fillRect(w*0.7, h*0.8, 100, 60);
+    } else if (obj === 'building') {
+      ctx.fillStyle = '#607d8b'; ctx.fillRect(w*0.6, h*0.4, 300, h*0.6);
+    } else if (obj === 'tree') {
+      ctx.fillStyle = '#4caf50'; ctx.beginPath(); ctx.arc(w*0.2, h*0.6, 80, 0, Math.PI*2); ctx.fill();
+    }
+  });
+
+  // Character
+  const charKey = scene.charKey || selectedCharKey;
+  const charImg = new Image();
+  charImg.src = characters[charKey].img;
+  await new Promise((resolve) => { charImg.onload = resolve; charImg.onerror = resolve; });
+  const charW = w * 0.4, charH = w * 0.4;
+  ctx.drawImage(charImg, (w - charW) / 2, h * 0.25, charW, charH);
+
+  // Dialogue text (Urdu)
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${w*0.06}px "Noto Nastaliq Urdu", "Segoe UI", sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.direction = 'rtl';
+  wrapText(ctx, scene.text, w/2, h*0.75, w*0.8, w*0.08);
+
+  // Speaker name
+  ctx.font = `${w*0.05}px sans-serif`;
+  ctx.fillStyle = '#ffeb3b';
+  ctx.fillText(scene.speaker, w/2, h*0.1);
+
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+function wrapText(ctx, text, x, y, maxWidth, lineHeight) {
+  const words = text.split(' ');
+  let line = '';
+  for (let n = 0; n < words.length; n++) {
+    const test = line + words[n] + ' ';
+    if (ctx.measureText(test).width > maxWidth && n > 0) {
+      ctx.fillText(line, x, y);
+      line = words[n] + ' ';
+      y += lineHeight;
+    } else {
+      line = test;
+    }
+  }
+  ctx.fillText(line, x, y);
+}
+
+async function renderEndScreen(text, w, h) {
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#1a237e';
+  ctx.fillRect(0, 0, w, h);
+  ctx.fillStyle = 'white';
+  ctx.font = `bold ${w*0.08}px sans-serif`;
+  ctx.textAlign = 'center';
+  ctx.fillText(text, w/2, h/2);
+  return new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+}
+
+// ==================== MUSIC GENERATOR ====================
+async function generateMusic(mood, durationSec) {
+  const sampleRate = 44100;
+  const ctx = new OfflineAudioContext(1, sampleRate * durationSec, sampleRate);
+  const bpm = { funny: 140, moral: 80, islamic: 70, friendship: 120 }[mood] || 100;
+  const beatLen = 60 / bpm;
+  const osc = ctx.createOscillator();
+  osc.type = 'triangle';
+  const gain = ctx.createGain();
+  gain.gain.value = 0.15;
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(0);
+  osc.stop(durationSec);
+  // Simple rhythmic pattern
+  for (let t = 0; t < durationSec; t += beatLen) {
+    gain.gain.setValueAtTime(0.2, t);
+    gain.gain.linearRampToValueAtTime(0, t + beatLen * 0.3);
+  }
+  return ctx.startRendering();
+}
+
+// Convert AudioBuffer to WAV (for music and TTS fallback)
+function audioBufferToWav(buffer) {
+  const numChannels = buffer.numberOfChannels;
+  const sampleRate = buffer.sampleRate;
+  const bitDepth = 16;
+  const bytesPerSample = bitDepth / 8;
+  const blockAlign = numChannels * bytesPerSample;
+  const data = buffer.getChannelData(0);
+  const dataLength = data.length * bytesPerSample;
+  const bufferLength = 44 + dataLength;
+  const arrayBuffer = new ArrayBuffer(bufferLength);
+  const view = new DataView(arrayBuffer);
+  writeString(view, 0, 'RIFF');
+  view.setUint32(4, 36 + dataLength, true);
+  writeString(view, 8, 'WAVE');
+  writeString(view, 12, 'fmt ');
+  view.setUint32(16, 16, true);
+  view.setUint16(20, 1, true);
+  view.setUint16(22, numChannels, true);
+  view.setUint32(24, sampleRate, true);
+  view.setUint32(28, sampleRate * blockAlign, true);
+  view.setUint16(32, blockAlign, true);
+  view.setUint16(34, bitDepth, true);
+  writeString(view, 36, 'data');
+  view.setUint32(40, dataLength, true);
+  const offset = 44;
+  for (let i = 0; i < data.length; i++) {
+    const sample = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(offset + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+  }
+  return arrayBuffer;
+}
+
+function writeString(view, offset, str) {
+  for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i));
+}
+
+// ==================== FFMPEG ====================
+async function loadFFmpeg() {
+  ffmpeg = new FFmpeg();
+  const baseURL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm';
+  await ffmpeg.load({
+    coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+    wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
+  });
+  ffmpegLoaded = true;
+}
+
+// ==================== CREATE REEL ====================
+async function createReel() {
+  const progress = document.getElementById('progress');
+  const downloadLink = document.getElementById('dl');
+  downloadLink.style.display = 'none';
+
+  // Gather voice files
+  if (voiceMode !== 'auto') {
+    document.querySelectorAll('.voice-upload').forEach(inp => {
+      const speaker = inp.dataset.speaker;
+      const file = inp.files[0];
+      if (file) scenes.filter(s => s.speaker === speaker).forEach(s => s.voiceFile = file);
+    });
+  } else {
+    if (autoAudioBlobs.length !== scenes.length) {
+      alert('Please generate the auto voice first.');
+      return;
+    }
+    scenes.forEach((s, i) => s.voiceFile = autoAudioBlobs[i]);
+  }
+
+  if (scenes.some(s => !s.voiceFile)) {
+    alert('Please provide a voice file for every speaker (upload or use auto voice).');
+    return;
+  }
+
+  if (!ffmpegLoaded) {
+    progress.textContent = 'Loading FFmpeg (one time ~30MB)...';
+    await loadFFmpeg();
+  }
+
+  try {
+    const platform = document.getElementById('platform').value;
+    let width = 1080, height = 1920;
+    if (platform === '16:9') { width = 1920; height = 1080; }
+    else if (platform === '1:1') { width = 1080; height = 1080; }
+
+    // Background music
+    const musicMood = document.getElementById('music').value;
+    const musicBuf = await generateMusic(musicMood, 30);
+    const musicBlob = new Blob([audioBufferToWav(musicBuf)], { type: 'audio/wav' });
+
+    // Render scene images
+    progress.textContent = 'Rendering scenes...';
+    const imageBlobs = [];
+    for (let i = 0; i < scenes.length; i++) {
+      const blob = await renderScene(scenes[i], width, height, [...activeObjects], selectedBg);
+      imageBlobs.push(blob);
+    }
+
+    // End screen
+    const endText = document.getElementById('endText').value || "Fazal's Reels";
+    const endBlob = await renderEndScreen(endText, width, height);
+    const endDuration = 2;
+
+    // Write files to FFmpeg virtual filesystem
+    for (let i = 0; i < scenes.length; i++) {
+      await ffmpeg.writeFile(`s${i}.png`, await fetchFile(imageBlobs[i]));
+      await ffmpeg.writeFile(`a${i}.wav`, await fetchFile(scenes[i].voiceFile));
+    }
+    await ffmpeg.writeFile('end.png', await fetchFile(endBlob));
+    await ffmpeg.writeFile('music.wav', await fetchFile(musicBlob));
+
+    // Get audio durations
+    const durations = [];
+    for (let i = 0; i < scenes.length; i++) {
+      const audioCtx = new AudioContext();
+      const buf = await audioCtx.decodeAudioData(await scenes[i].voiceFile.arrayBuffer());
+      durations.push(buf.duration);
+      audioCtx.close();
+    }
+
+    // Build FFmpeg command
+    let args = [];
+    for (let i = 0; i < scenes.length; i++) {
+      args.push('-loop', '1', '-t', durations[i].toFixed(3), '-i', `s${i}.png`);
+    }
+    for (let i = 0; i < scenes.length; i++) {
+      args.push('-i', `a${i}.wav`);
+    }
+    args.push('-i', 'music.wav');
+    args.push('-loop', '1', '-t', endDuration.toFixed(1), '-i', 'end.png');
+
+    let videoInputs = '', audioInputs = '';
+    for (let i = 0; i < scenes.length; i++) {
+      videoInputs += `[${i}:v]`;
+      audioInputs += `[${scenes.length + i}:a]`;
+    }
+    const vConcat = `${videoInputs}[${scenes.length*2+2}:v]concat=n=${scenes.length+1}:v=1:a=0[mainv]`;
+    const aConcat = `${audioInputs}concat=n=${scenes.length}:v=0:a=1[speech]; anullsrc=r=44100:cl=stereo:d=${endDuration}[silence]; [speech][silence]concat=n=2:v=0:a=1[maina]`;
+    const mixFilter = `[maina][${scenes.length*2+1}:a]amix=inputs=2:duration=first:dropout_transition=2[mixa]`;
+
+    args.push('-filter_complex', `${vConcat}; ${aConcat}; ${mixFilter}`);
+    args.push('-map', '[mainv]', '-map', '[mixa]');
+    args.push('-c:v', 'libx264', '-preset', 'ultrafast', '-pix_fmt', 'yuv420p');
+    args.push('-shortest', 'output.mp4');
+
+    progress.textContent = 'Creating reel (may take a minute)...';
+    await ffmpeg.exec(args);
+
+    const data = await ffmpeg.readFile('output.mp4');
+    const blob = new Blob([data.buffer], { type: 'video/mp4' });
+    downloadLink.href = URL.createObjectURL(blob);
+    downloadLink.style.display = 'block';
+    progress.textContent = '✔️ Reel ready! Download above.';
+  } catch (e) {
+    progress.textContent = '❌ Error: ' + e.message;
+  } finally {
+    // Cleanup virtual files
+    for (let i = 0; i < scenes.length; i++) {
+      try { await ffmpeg.deleteFile(`s${i}.png`); } catch(e){}
+      try { await ffmpeg.deleteFile(`a${i}.wav`); } catch(e){}
+    }
+    try { await ffmpeg.deleteFile('end.png'); } catch(e){}
+    try { await ffmpeg.deleteFile('music.wav'); } catch(e){}
+    try { await ffmpeg.deleteFile('output.mp4'); } catch(e){}
+  }
+}
+
+// ==================== AI ASSISTANT ====================
+function addAIMessage(text, sender) {
+  const msgs = document.getElementById('aiMsgs');
+  const div = document.createElement('div');
+  div.className = `msg ${sender}-msg`;
+  div.textContent = text;
+  msgs.appendChild(div);
+  msgs.scrollTop = msgs.scrollHeight;
+}
+
+function handleAIInput() {
+  const input = document.getElementById('aiInput');
+  const cmd = input.value.trim();
+  if (!cmd) return;
+  addAIMessage(cmd, 'user');
+  input.value = '';
+  processAICommand(cmd.toLowerCase());
+}
+
+function processAICommand(cmd) {
+  if (cmd.includes('story') || cmd.includes('کہانی')) {
+    let theme = 'funny';
+    if (cmd.includes('moral') || cmd.includes('اخلاقی')) theme = 'moral';
+    else if (cmd.includes('islamic') || cmd.includes('اسلامی')) theme = 'islamic';
+    else if (cmd.includes('friend') || cmd.includes('دوستی')) theme = 'friendship';
+    document.getElementById('theme').value = theme;
+    generateStoryFromUI();
+    const objs = [];
+    if (cmd.includes('car') || cmd.includes('کار')) objs.push('car');
+    if (cmd.includes('bike') || cmd.includes('موٹر')) objs.push('bike');
+    if (cmd.includes('building') || cmd.includes('عمارت')) objs.push('building');
+    if (cmd.includes('tree') || cmd.includes('درخت')) objs.push('tree');
+    objs.forEach(o => {
+      const btn = document.querySelector(`.obj-btn[data-o="${o}"]`);
+      if (btn && !btn.classList.contains('active')) {
+        btn.classList.add('active');
+        activeObjects.add(o);
+      }
+    });
+    addAIMessage(`✅ Story generated (${theme}) with objects.`, 'bot');
+  }
+  else if (cmd.includes('character') || cmd.includes('کردار')) {
+    const keys = Object.keys(characters);
+    for (let k of keys) {
+      if (cmd.includes(k) || cmd.includes(characters[k].name.toLowerCase())) {
+        selectedCharKey = k;
+        renderCharGrid();
+        updateSpeakerUploads();
+        addAIMessage(`Character changed to ${characters[k].name}.`, 'bot');
+        return;
+      }
+    }
+    addAIMessage('Unknown character. Try: boy, girl, man, woman, grandpa.', 'bot');
+  }
+  else if (cmd.includes('object') || cmd.includes('car') || cmd.includes('bike') || cmd.includes('building') || cmd.includes('tree')) {
+    const objMap = { car: 'car', bike: 'bike', building: 'building', tree: 'tree' };
+    for (let [key, obj] of Object.entries(objMap)) {
+      if (cmd.includes(key)) {
+        const btn = document.querySelector(`.obj-btn[data-o="${obj}"]`);
+        if (btn) {
+          if (activeObjects.has(obj)) {
+            activeObjects.delete(obj);
+            btn.classList.remove('active');
+            addAIMessage(`Removed ${obj}.`, 'bot');
+          } else {
+            activeObjects.add(obj);
+            btn.classList.add('active');
+            addAIMessage(`Added ${obj}.`, 'bot');
+          }
+        }
+        return;
+      }
+    }
+  }
+  else if (cmd.includes('music') || cmd.includes('موسیقی')) {
+    if (cmd.includes('funny')) setM('funny');
+    else if (cmd.includes('sad') || cmd.includes('emotional')) setM('sad');
+    else if (cmd.includes('calm')) setM('calm');
+    else if (cmd.includes('upbeat')) setM('upbeat');
+    else addAIMessage('Music options: funny, sad, calm, upbeat.', 'bot');
+    function setM(m) { document.getElementById('music').value = m; addAIMessage(`Music set to ${m}.`, 'bot'); }
+  }
+  else if (cmd.includes('voice') || cmd.includes('آواز')) {
+    if (cmd.includes('auto')) {
+      generateVoice();
+      addAIMessage('Generating Urdu voice...', 'bot');
+    } else {
+      addAIMessage('You can say "auto voice" to generate speech, or upload files manually.', 'bot');
+    }
+  }
+  else if (cmd.includes('download') || cmd.includes('ڈاؤن لوڈ')) {
+    if (cmd.includes('youtube')) { document.getElementById('platform').value = '16:9'; createReel(); }
+    else if (cmd.includes('tiktok') || cmd.includes('reel')) { document.getElementById('platform').value = '9:16'; createReel(); }
+    else if (cmd.includes('facebook')) { document.getElementById('platform').value = '1:1'; createReel(); }
+    else { createReel(); }
+    addAIMessage('Creating reel...', 'bot');
+  }
+  else if (cmd.includes('preview') || cmd.includes('پیش منظر')) {
+    previewScenes();
+    addAIMessage('Preview updated.', 'bot');
+  }
+  else if (cmd.includes('help') || cmd.includes('مدد')) {
+    addAIMessage('I understand: story (funny/moral/islamic/friendship), character (boy/girl/man/woman/grandpa), objects (car/bike/building/tree), music (funny/sad/calm/upbeat), auto voice, download for youtube/tiktok/facebook, preview.', 'bot');
+  }
+  else {
+    addAIMessage('I did not understand. Try "funny story" or "help".', 'bot');
+  }
+}
+
+function generateStoryFromUI() {
+  const theme = document.getElementById('theme').value;
+  scenes = storyDB[theme].map(s => ({...s, charKey: selectedCharKey}));
+  document.getElementById('scriptOutput').innerHTML = scenes.map(s => `<b>${s.speaker}:</b> ${s.text}`).join('<br>');
+  updateSpeakerUploads();
+}
+
+// ==================== INITIALIZATION ====================
+document.getElementById('genStory').addEventListener('click', generateStoryFromUI);
+document.getElementById('autoVoice').addEventListener('click', generateVoice);
+document.getElementById('preview').addEventListener('click', previewScenes);
+document.getElementById('makeReel').addEventListener('click', createReel);
+document.getElementById('saveChar').addEventListener('click', () => {
+  const name = prompt('Character name?');
+  if (!name) return;
+  const head = document.getElementById('ht').value;
+  const hair = document.getElementById('hair').value;
+  const skin = document.getElementById('skin').value;
+  const outfit = document.getElementById('outfit').value;
+  const outfitColor = document.getElementById('outfitColor').value;
+  characters[name] = {
+    name,
+    img: buildCharSVG({head, hair, skin, outfit, outfitColor})
+  };
+  renderCharGrid();
+  alert(name + ' added!');
+});
+document.getElementById('bg').addEventListener('change', e => selectedBg = e.target.value);
+document.querySelectorAll('.obj-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const obj = btn.dataset.o;
+    if (activeObjects.has(obj)) {
+      activeObjects.delete(obj);
+      btn.classList.remove('active');
+    } else {
+      activeObjects.add(obj);
+      btn.classList.add('active');
+    }
+  });
+});
+document.getElementById('aiSend').addEventListener('click', handleAIInput);
+document.getElementById('aiInput').addEventListener('keypress', e => { if(e.key === 'Enter') handleAIInput(); });
+
+// Load character grid initially
+renderCharGrid();
+</script>
+</body>
+</html>
