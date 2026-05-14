@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Fazal's Reels – Urdu Cartoon Studio</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f5f5f5; padding: 10px; }
+    .app { max-width: 500px; margin: 0 auto; background: white; border-radius: 24px; padding: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+    h1 { text-align: center; color: #e91e63; }
+    .section { background: #fafafa; border-radius: 16px; padding: 15px; margin-bottom: 15px; }
+    select, input[type="file"], button, input[type="text"] {
+      width: 100%; padding: 12px; margin: 6px 0; border-radius: 12px; border: 1px solid #ddd; font-size: 16px; background: white;
+    }
+    button { background: #e91e63; color: white; border: none; font-weight: bold; cursor: pointer; }
+    .char-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+    .char-card { width: 70px; text-align: center; cursor: pointer; }
+    .char-card img { width: 55px; height: 55px; border-radius: 50%; border: 3px solid transparent; }
+    .char-card.selected img { border-color: #e91e63; }
+    .obj-btn { background: #eee; padding: 8px 14px; border-radius: 20px; font-size: 14px; cursor: pointer; display: inline-block; margin: 2px; }
+    .obj-btn.active { background: #e91e63; color: white; }
+    .scene-preview { background: #2c3e50; color: white; padding: 8px; border-radius: 12px; margin: 5px 0; display: flex; align-items: center; gap: 8px; }
+    .scene-preview img { width: 35px; height: 35px; border-radius: 50%; }
+    .ai-chat { background: #f0f0f0; border-radius: 16px; padding: 10px; margin-top: 15px; }
+    .ai-messages { height: 200px; overflow-y: auto; background: white; border-radius: 12px; padding: 10px; margin-bottom: 8px; }
+    .msg { margin: 6px 0; padding: 8px 12px; border-radius: 16px; max-width: 80%; font-size: 14px; word-break: break-word; }
+    .user-msg { background: #e91e63; color: white; margin-left: auto; }
+    .bot-msg { background: #e0e0e0; }
+    .ai-input { display: flex; gap: 8px; }
+    .ai-input input { flex: 1; border: none; padding: 10px; border-radius: 20px; background: white; }
+  </style>
+</head>
+<body>
+<div class="app">
+  <h1>🎬 Fazal's Reels</h1>
+
+  <div class="section">
+    <h2>1. Story</h2>
+    <select id="theme"><option value="funny">Funny</option><option value="moral">Moral</option><option value="islamic">Islamic</option><option value="friendship">Friendship</option></select>
+    <button id="genStory">Generate Story</button>
+    <div id="scriptOutput" style="background:#fff3e0;padding:10px;border-radius:8px;margin-top:8px;"></div>
+  </div>
+
+  <div class="section">
+    <h2>2. Characters</h2>
+    <div class="char-grid" id="charGrid"></div>
+    <details><summary>+ New</summary>
+      <select id="ht"><option value="round">Round head</option><option value="oval">Oval head</option></select>
+      <select id="hair"><option value="short">Short hair</option><option value="long">Long</option><option value="none">None</option></select>
+      Skin <input type="color" id="skin" value="#f8c291"> Outfit <select id="outfit"><option value="shirt">Shirt</option><option value="dress">Dress</option><option value="kurta">Kurta</option></select> Color <input type="color" id="outfitColor" value="#3f51b5">
+      <button id="saveChar">Save</button>
+    </details>
+  </div>
+
+  <div class="section">
+    <h2>3. Scene</h2>
+    <div id="objBtns"><span class="obj-btn" data-o="car">🚗</span><span class="obj-btn" data-o="bike">🏍️</span><span class="obj-btn" data-o="building">🏢</span><span class="obj-btn" data-o="tree">🌳</span></div>
+    <select id="bg"><option value="gradient">Gradient</option><option value="home">Home</option><option value="school">School</option><option value="mosque">Mosque</option><option value="park">Park</option></select>
+    Music <select id="music"><option value="funny">Funny</option><option value="sad">Emotional</option><option value="calm">Calm</option><option value="upbeat">Upbeat</option></select>
+  </div>
+
+  <div class="section">
+    <h2>4. Reel</h2>
+    <button id="autoVoice">🎙️ Generate Urdu Voice</button><div id="voiceStatus"></div>
+    <div id="speakerUploads"></div>
+    <button id="preview">👁️ Preview</button><div id="previewArea"></div>
+    Platform <select id="platform"><option value="9:16">9:16 Shorts/TikTok</option><option value="16:9">16:9 YouTube</option><option value="1:1">1:1 Facebook</option></select>
+    End text <input type="text" id="endText" value="Fazal's Reels">
+    <button id="makeReel">✨ Create Reel</button>
+    <div id="progress"></div><a id="dl" style="display:none;">⬇️ Download</a>
+  </div>
+
+  <div class="ai-chat">
+    <h3>🤖 AI</h3>
+    <div class="ai-messages" id="aiMsgs"><div class="msg bot-msg">Try: "funny story with car"</div></div>
+    <div class="ai-input"><input id="aiInput" placeholder="Command..."><button id="aiSend">Send</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mespeak@2.1.1/dist/mespeak.min.js"></script>
+<script type="importmap">
+{ "imports": { "@ffmpeg/ffmpeg": "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.6/dist/esm/index.js", "@ffmpeg/util": "https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/esm/index.js" } }
+</script>
+<script type="module">
+import { FFmpeg } from '@ffmpeg/ffmpeg';
+import { fetchFile, toBlobURL } from '@ffmpeg/util';
+
+// ---------- SVG builder ----------
+function buildCharSVG({head='round', hair='short', skin='#f8c291', outfit='shirt', outfitColor='#3f51b5'}) {
+  const h = head==='round'?`<circle cx="50" cy="35" r="18" fill="${skin}" stroke="#333"/>`:`<ellipse cx="50" cy="35" rx="16" ry="20" fill="${skin}" stroke="#333"/>`;
+  let hr=''; if(hair==='short') hr='<path d="M28 30 Q50 10 72 30" fill="#5d4037" stroke="#333"/>'; else if(hair==='long') hr='<path d="M28 30 Q50 10 72 30" fill="#5d4037" stroke="#333"/><rect x="25" y="18" width="10" height="20" fill="#5d4037" rx="3"/>';
+  let o=''; if(outfit==='shirt') o=`<rect x="35" y="53" width="30" height="35" fill="${outfitColor}" rx="5" stroke="#333"/>`; else if(outfit==='dress') o=`<path d="M35 53 L35 90 L65 90 L65 53 Q50 45 35 53" fill="${outfitColor}" stroke="#333"/>`; else o=`<rect x="35" y="53" width="30" height="35" fill="${outfitColor}" rx="3" stroke="#333"/><rect x="38" y="55" width="8" height="25" fill="#fff" opacity="0.3"/>`;
+  return `data:image/svg+xml,${encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="35" r="18" fill="${skin}" stroke="#333"/><circle cx="43" cy="32" r="2" fill="#000"/><circle cx="57" cy="32" r="2" fill="#000"/><path d="M45 40 Q50 45 55 40" stroke="#000" fill="none" stroke-width="2"/>${hr}${o}</svg>`)}`;
+}
+let characters = {
+  boy:{name:"Boy",img:buildCharSVG({hair:'short',outfit:'shirt',outfitColor:'#3f51b5'})},
+  girl:{name:"Girl",img:buildCharSVG({hair:'long',outfit:'dress',outfitColor:'#f48fb1'})},
+  man:{name:"Man",img:buildCharSVG({head:'oval',hair:'short',outfit:'kurta',outfitColor:'#607d8b'})},
+  woman:{name:"Woman",img:buildCharSVG({head:'oval',hair:'long',outfit:'dress',outfitColor:'#ec407a'})},
+  grandpa:{name:"Grandpa",img:buildCharSVG({head:'oval',hair:'none',outfit:'kurta',outfitColor:'#795548'})}
+};
+const storyDB = {
+  funny:[["Child","امی! آج سکول میں ماسٹر جی کی کرسی غائب کر دی۔"],["Mother","کیا؟ تم نے یہ کیوں کیا؟"],["Child","بس مذاق تھا، پوری کلاس ہنس پڑی۔"],["Mother","مذاق اچھی بات ہے مگر شرارت نہیں کرنی چاہیے۔"]],
+  moral:[["Grandfather","بیٹا، سچ بولنا سب سے بڑی بہادری ہے۔"],["Girl","دادا، مگر سچ بولنے سے کبھی کبھی ڈانٹ پڑتی ہے۔"],["Grandfather","ڈانٹ سے نہیں ڈرنا چاہیے، سچ کا انعام بہت بڑا ہوتا ہے۔"]],
+  islamic:[["Child","ابو، اللہ ہمیں کیوں آزماتا ہے؟"],["Father","تاکہ ہم صبر کریں اور ثواب کمائیں، بیٹا۔"],["Child","پھر میں ہر مشکل میں صبر کروں گا ان شاء اللہ۔"]],
+  friendship:[["Boy","یار! آج دل بہت اُداس ہے۔"],["Friend","کیوں؟ کیا ہوا؟ چلیں چائے پیتے ہیں، بتاؤ۔"],["Boy","بس دوست ہو تو ایسا، سب ٹھیک ہو جاتا ہے۔"]]
+};
+
+let scenes=[], selChar='boy', activeObjs=new Set(), bg='gradient', voiceMode='upload', autoBlobs=[], ffmpeg, ffmpegLoaded=false, meSpeakReady=false;
+
+// ---------- UI helpers ----------
+function renderCharGrid(){ const g=document.getElementById('charGrid'); g.innerHTML=''; Object.entries(characters).forEach(([k,c])=>{ const d=document.createElement('div'); d.className='char-card'+(k===selChar?' selected':''); d.innerHTML=`<img src="${c.img}"><br>${c.name}`; d.onclick=()=>{ selChar=k; scenes.forEach(s=>s.charKey=k); renderCharGrid(); updateSpeakerUI(); }; g.appendChild(d); }); }
+function updateSpeakerUI(){ const c=document.getElementById('speakerUploads'); if(!c||!scenes.length)return; c.innerHTML=''; [...new Set(scenes.map(s=>s.speaker))].forEach(sp=>{ const d=document.createElement('div'); d.style='display:flex;align-items:center;gap:8px;margin:5px 0;'; d.innerHTML=`<img src="${characters[selChar].img}" style="width:35px;height:35px;border-radius:50%"><b>${sp}</b><input type="file" accept="audio/*" class="vupload" data-speaker="${sp}">`; c.appendChild(d); }); }
+
+// ---------- meSpeak ----------
+function waitForMeSpeak(){ return new Promise((resolve,reject)=>{ if(window.meSpeak) return resolve(); let tries=0; const iv=setInterval(()=>{ if(window.meSpeak){ clearInterval(iv); resolve(); } if(++tries>50){ clearInterval(iv); reject('meSpeak not loaded'); } },200); }); }
+async function loadUrduVoice(){ if(meSpeakReady)return; await waitForMeSpeak(); meSpeak.loadConfig({amph:100,pitch:50,speed:145,wordgap:5}); const r=await fetch('https://cdn.jsdelivr.net/gh/kripken/speak.js@master/voices/ur.json'); const v=await r.json(); meSpeak.loadVoice(v); meSpeakReady=true; }
+async function tts(text){ await loadUrduVoice(); const b64=meSpeak.speak(text,{rawdata:'data-url'}); const bs=atob(b64.split(',')[1]); const ab=new ArrayBuffer(bs.length); const ia=new Uint8Array(ab); for(let i=0;i<bs.length;i++)ia[i]=bs.charCodeAt(i); return new Blob([ab],{type:'audio/wav'}); }
+
+// ---------- Voice ----------
+async function generateVoice(){ const s=document.getElementById('voiceStatus'); try{ s.textContent='Loading...'; autoBlobs=[]; for(let i=0;i<scenes.length;i++){ s.textContent=`Voice ${i+1}/${scenes.length}`; autoBlobs.push(await tts(scenes[i].text)); } voiceMode='auto'; s.textContent='✔️ Ready'; }catch(e){ s.textContent='Error: '+e.message; } }
+
+// ---------- Preview ----------
+function previewScenes(){ if(voiceMode!=='auto'){ document.querySelectorAll('.vupload').forEach(i=>{ const f=i.files[0]; if(f) scenes.filter(s=>s.speaker===i.dataset.speaker).forEach(s=>s.voiceFile=f); }); } const p=document.getElementById('previewArea'); p.innerHTML=''; scenes.forEach(s=>{ const d=document.createElement('div'); d.className='scene-preview'; d.innerHTML=`<img src="${characters[s.charKey].img}"><span><b>${s.speaker}:</b> ${s.text}</span>`; p.appendChild(d); }); }
+
+// ---------- Scene render ----------
+async function renderScene(scene,w,h,objs,bg){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d');
+  if(bg==='home'){ x.fillStyle='#87CEEB';x.fillRect(0,0,w,h); x.fillStyle='#8B4513';x.fillRect(0,h*0.6,w,h*0.4); x.fillStyle='#F5DEB3';x.fillRect(w*0.4,h*0.4,w*0.3,h*0.3); }
+  else if(bg==='school'){ x.fillStyle='#87CEEB';x.fillRect(0,0,w,h); x.fillStyle='#808080';x.fillRect(0,h*0.7,w,h*0.3); x.fillStyle='#FFD700';x.fillRect(w*0.3,h*0.4,w*0.4,h*0.3); }
+  else if(bg==='mosque'){ x.fillStyle='#4682B4';x.fillRect(0,0,w,h); x.fillStyle='#F5F5DC';x.fillRect(0,h*0.6,w,h*0.4); x.fillStyle='#006400';x.beginPath();x.arc(w*0.5,h*0.3,80,Math.PI,0);x.fill(); }
+  else if(bg==='park'){ x.fillStyle='#87CEEB';x.fillRect(0,0,w,h); x.fillStyle='#228B22';x.fillRect(0,h*0.5,w,h*0.5); x.fillStyle='#8B4513';x.fillRect(w*0.4,h*0.7,40,h*0.2); }
+  else { const g=x.createLinearGradient(0,0,0,h); g.addColorStop(0,'#1a237e'); g.addColorStop(1,'#4a148c'); x.fillStyle=g; x.fillRect(0,0,w,h); }
+  objs.forEach(o=>{ if(o==='car'){ x.fillStyle='#f44336'; x.fillRect(w*0.1,h*0.75,200,100); x.fillStyle='#000'; x.fillRect(w*0.15,h*0.73,30,30); x.fillRect(w*0.35,h*0.73,30,30); } if(o==='bike'){ x.fillStyle='#ff9800'; x.fillRect(w*0.7,h*0.8,100,60); } if(o==='building'){ x.fillStyle='#607d8b'; x.fillRect(w*0.6,h*0.4,300,h*0.6); } if(o==='tree'){ x.fillStyle='#4caf50'; x.beginPath(); x.arc(w*0.2,h*0.6,80,0,Math.PI*2); x.fill(); } });
+  const img=new Image(); img.src=characters[scene.charKey].img; await new Promise(r=>{img.onload=r;img.onerror=r;}); x.drawImage(img,(w-w*0.4)/2,h*0.25,w*0.4,w*0.4);
+  x.fillStyle='white'; x.font=`bold ${w*0.06}px "Noto Nastaliq Urdu","Segoe UI",sans-serif`; x.textAlign='center'; x.direction='rtl'; wrapText(x,scene.text,w/2,h*0.75,w*0.8,w*0.08);
+  x.font=`${w*0.05}px sans-serif`; x.fillStyle='#ffeb3b'; x.fillText(scene.speaker,w/2,h*0.1);
+  return new Promise(r=>c.toBlob(r,'image/png'));
+}
+function wrapText(x,text,xp,yp,mw,lh){ const w=text.split(' '); let l=''; for(let i=0;i<w.length;i++){ const t=l+w[i]+' '; if(x.measureText(t).width>mw&&i>0){ x.fillText(l,xp,yp); l=w[i]+' '; yp+=lh; }else l=t; } x.fillText(l,xp,yp); }
+async function renderEndScreen(text,w,h){ const c=document.createElement('canvas'); c.width=w; c.height=h; const x=c.getContext('2d'); x.fillStyle='#1a237e'; x.fillRect(0,0,w,h); x.fillStyle='white'; x.font=`bold ${w*0.08}px sans-serif`; x.textAlign='center'; x.fillText(text,w/2,h/2); return new Promise(r=>c.toBlob(r,'image/png')); }
+
+// ---------- Music ----------
+async function genMusic(mood,dur){ const ctx=new OfflineAudioContext(1,44100*dur,44100); const bpm={funny:140,moral:80,islamic:70,friendship:120}[mood]||100; const bl=60/bpm; const o=ctx.createOscillator(); o.type='triangle'; const g=ctx.createGain(); g.gain.value=0.1; o.connect(g); g.connect(ctx.destination); o.start(0); o.stop(dur); for(let t=0;t<dur;t+=bl){ g.gain.setValueAtTime(0.15,t); g.gain.linearRampToValueAtTime(0,t+bl*0.3); } return ctx.startRendering(); }
+function audioBufferToWav(b){ const nc=b.numberOfChannels,sr=b.sampleRate,bd=16; const bps=bd/8,ba=nc*bps; const d=b.getChannelData(0); const dl=d.length*bps,blen=44+dl; const ab=new ArrayBuffer(blen); const v=new DataView(ab); writeS(v,0,'RIFF'); v.setUint32(4,36+dl,true); writeS(v,8,'WAVE'); writeS(v,12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,nc,true); v.setUint32(24,sr,true); v.setUint32(28,sr*ba,true); v.setUint16(32,ba,true); v.setUint16(34,bd,true); writeS(v,36,'data'); v.setUint32(40,dl,true); for(let i=0;i<d.length;i++){ const s=Math.max(-1,Math.min(1,d[i])); v.setInt16(44+i*2,s<0?s*0x8000:s*0x7FFF,true); } return ab; }
+function writeS(v,o,s){ for(let i=0;i<s.length;i++) v.setUint8(o+i,s.charCodeAt(i)); }
+
+// ---------- FFmpeg ----------
+async function loadFFmpeg(){ ffmpeg=new FFmpeg(); const b='https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm'; await ffmpeg.load({coreURL:await toBlobURL(`${b}/ffmpeg-core.js`,'text/javascript'),wasmURL:await toBlobURL(`${b}/ffmpeg-core.wasm`,'application/wasm')}); ffmpegLoaded=true; }
+
+// ---------- Create Reel ----------
+async function createReel(){ const p=document.getElementById('progress'),dl=document.getElementById('dl'); dl.style.display='none';
+ if(voiceMode!=='auto'){ document.querySelectorAll('.vupload').forEach(i=>{ const f=i.files[0]; if(f) scenes.filter(s=>s.speaker===i.dataset.speaker).forEach(s=>s.voiceFile=f); }); } else { if(autoBlobs.length!==scenes.length){ alert('Generate voice first'); return; } scenes.forEach((s,i)=>s.voiceFile=autoBlobs[i]); }
+ if(scenes.some(s=>!s.voiceFile)){ alert('Missing voice files'); return; }
+ if(!ffmpegLoaded){ p.textContent='Loading FFmpeg...'; await loadFFmpeg(); }
+ try{
+  const plat=document.getElementById('platform').value; let w=1080,h=1920; if(plat==='16:9'){w=1920;h=1080;} else if(plat==='1:1'){w=1080;h=1080;}
+  const musicBuf=await genMusic(document.getElementById('music').value,30); const musicBlob=new Blob([audioBufferToWav(musicBuf)],{type:'audio/wav'});
+  const imgs=[]; for(let i=0;i<scenes.length;i++) imgs.push(await renderScene(scenes[i],w,h,[...activeObjs],bg));
+  const endBlob=await renderEndScreen(document.getElementById('endText').value||"Fazal's Reels",w,h); const endDur=2;
+  for(let i=0;i<scenes.length;i++){ await ffmpeg.writeFile(`s${i}.png`,await fetchFile(imgs[i])); await ffmpeg.writeFile(`a${i}.wav`,await fetchFile(scenes[i].voiceFile)); }
+  await ffmpeg.writeFile('end.png',await fetchFile(endBlob)); await ffmpeg.writeFile('music.wav',await fetchFile(musicBlob));
+  const durs=[]; for(let i=0;i<scenes.length;i++){ const ac=new AudioContext(); const ab=await ac.decodeAudioData(await scenes[i].voiceFile.arrayBuffer()); durs.push(ab.duration); ac.close(); }
+  let args=[]; for(let i=0;i<scenes.length;i++) args.push('-loop','1','-t',durs[i].toFixed(3),'-i',`s${i}.png`);
+  for(let i=0;i<scenes.length;i++) args.push('-i',`a${i}.wav`); args.push('-i','music.wav'); args.push('-loop','1','-t',endDur.toFixed(1),'-i','end.png');
+  let vi='',ai=''; for(let i=0;i<scenes.length;i++){vi+=`[${i}:v]`; ai+=`[${scenes.length+i}:a]`;}
+  const vc=`${vi}[${scenes.length*2+2}:v]concat=n=${scenes.length+1}:v=1:a=0[mainv]`;
+  const ac=`${ai}concat=n=${scenes.length}:v=0:a=1[speech]; anullsrc=r=44100:d=${endDur}[silence]; [speech][silence]concat=n=2:v=0:a=1[maina]`;
+  const mix=`[maina][${scenes.length*2+1}:a]amix=inputs=2:duration=first[mixa]`;
+  args.push('-filter_complex',`${vc}; ${ac}; ${mix}`); args.push('-map','[mainv]','-map','[mixa]');
+  args.push('-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p','-shortest','output.mp4');
+  p.textContent='Rendering...'; await ffmpeg.exec(args);
+  const data=await ffmpeg.readFile('output.mp4'); const blob=new Blob([data.buffer],{type:'video/mp4'});
+  dl.href=URL.createObjectURL(blob); dl.style.display='block'; p.textContent='✔️ Ready';
+ }catch(e){ p.textContent='Error: '+e.message; }
+ finally{ for(let i=0;i<scenes.length;i++){try{await ffmpeg.deleteFile(`s${i}.png`);}catch(e){} try{await ffmpeg.deleteFile(`a${i}.wav`);}catch(e){}} try{await ffmpeg.deleteFile('end.png');}catch(e){} try{await ffmpeg.deleteFile('music.wav');}catch(e){} try{await ffmpeg.deleteFile('output.mp4');}catch(e){} }
+}
+
+// ---------- AI ----------
+function addAIMsg(t,s){ const m=document.getElementById('aiMsgs'); const d=document.createElement('div'); d.className=`msg ${s}-msg`; d.textContent=t; m.appendChild(d); m.scrollTop=m.scrollHeight; }
+function handleAI(){ const i=document.getElementById('aiInput'); const cmd=i.value.trim(); if(!cmd)return; addAIMsg(cmd,'user'); i.value=''; processAI(cmd.toLowerCase()); }
+function processAI(cmd){
+  if(cmd.includes('story')||cmd.includes('کہانی')){ let t='funny'; if(cmd.includes('moral')||cmd.includes('اخلاقی'))t='moral'; else if(cmd.includes('islamic')||cmd.includes('اسلامی'))t='islamic'; else if(cmd.includes('friend')||cmd.includes('دوستی'))t='friendship';
+    document.getElementById('theme').value=t; genStory(); const objs=[]; if(cmd.includes('car')||cmd.includes('کار'))objs.push('car'); if(cmd.includes('bike')||cmd.includes('موٹر'))objs.push('bike'); if(cmd.includes('building')||cmd.includes('عمارت'))objs.push('building'); if(cmd.includes('tree')||cmd.includes('درخت'))objs.push('tree');
+    objs.forEach(o=>{ document.querySelector(`.obj-btn[data-o="${o}"]`).classList.add('active'); activeObjs.add(o); }); addAIMsg('Story generated.','bot');
+  } else if(cmd.includes('character')||cmd.includes('کردار')){ const ks=Object.keys(characters); for(let k of ks){ if(cmd.includes(k)||cmd.includes(characters[k].name.toLowerCase())){ selChar=k; renderCharGrid(); updateSpeakerUI(); addAIMsg(`Character: ${characters[k].name}`,'bot'); return; } } addAIMsg('Unknown character','bot'); }
+  else if(cmd.includes('object')||cmd.includes('car')||cmd.includes('bike')||cmd.includes('building')||cmd.includes('tree')){ const m={car:'car',bike:'bike',building:'building',tree:'tree'}; for(let w in m){ if(cmd.includes(w)){ const btn=document.querySelector(`.obj-btn[data-o="${m[w]}"]`); btn.click(); addAIMsg(`Toggled ${m[w]}`,'bot'); return; } } }
+  else if(cmd.includes('music')||cmd.includes('موسیقی')){ if(cmd.includes('funny')) setM('funny'); else if(cmd.includes('sad')) setM('sad'); else if(cmd.includes('calm')) setM('calm'); else if(cmd.includes('upbeat')) setM('upbeat'); else addAIMsg('Music: funny,sad,calm,upbeat','bot'); function setM(m){ document.getElementById('music').value=m; addAIMsg('Music set','bot'); } }
+  else if(cmd.includes('voice')||cmd.includes('آواز')){ if(cmd.includes('auto')){ generateVoice(); addAIMsg('Generating voice...','bot'); } else addAIMsg('Say "auto voice"','bot'); }
+  else if(cmd.includes('download')||cmd.includes('ڈاؤن لوڈ')){ if(cmd.includes('youtube')){ document.getElementById('platform').value='16:9'; createReel(); } else if(cmd.includes('tiktok')){ document.getElementById('platform').value='9:16'; createReel(); } else if(cmd.includes('facebook')){ document.getElementById('platform').value='1:1'; createReel(); } else createReel(); addAIMsg('Creating...','bot'); }
+  else if(cmd.includes('preview')){ previewScenes(); addAIMsg('Preview shown','bot'); }
+  else addAIMsg('Try: funny story with car','bot');
+}
+function genStory(){ const t=document.getElementById('theme').value; scenes=storyDB[t].map(([sp,tx])=>({speaker:sp,text:tx,charKey:selChar})); document.getElementById('scriptOutput').innerHTML=scenes.map(s=>`<b>${s.speaker}:</b> ${s.text}`).join('<br>'); updateSpeakerUI(); }
+
+// ---------- Init ----------
+document.getElementById('genStory').onclick=genStory;
+document.getElementById('autoVoice').onclick=generateVoice;
+document.getElementById('preview').onclick=previewScenes;
+document.getElementById('makeReel').onclick=createReel;
+document.getElementById('saveChar').onclick=()=>{ const n=prompt('Name?'); if(!n)return; const h=document.getElementById('ht').value, hr=document.getElementById('hair').value, sk=document.getElementById('skin').value, o=document.getElementById('outfit').value, oc=document.getElementById('outfitColor').value; characters[n]={name:n,img:buildCharSVG({head:h,hair:hr,skin:sk,outfit:o,outfitColor:oc})}; renderCharGrid(); };
+document.getElementById('bg').onchange=e=>bg=e.target.value;
+document.querySelectorAll('.obj-btn').forEach(b=>{ b.onclick=()=>{ const o=b.dataset.o; if(activeObjs.has(o)){activeObjs.delete(o);b.classList.remove('active');}else{activeObjs.add(o);b.classList.add('active');} }; });
+document.getElementById('aiSend').onclick=handleAI;
+document.getElementById('aiInput').onkeypress=e=>{ if(e.key==='Enter')handleAI(); };
+renderCharGrid();
+</script>
+</body>
+</html>
